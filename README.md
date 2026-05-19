@@ -12,7 +12,7 @@ An intelligent, fully automated customer support system built with **n8n**, **Gr
 
 ![Demo GIF](./assets/demo.gif)
 
-<!-- Record a screen capture showing the full flow and save as assets/demo.gif -->
+**[Watch full demo on Loom](https://www.loom.com/share/dda38bb144e9454eac395c839798776a)**
 
 ---
 
