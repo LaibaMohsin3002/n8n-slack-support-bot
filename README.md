@@ -375,7 +375,7 @@ The escalation workflow connects two separate node chains from the IF true outpu
 
 - [ ] Deploy to Oracle Cloud Free Tier for 24/7 uptime
 - [ ] Add `/resolve [ticket-id]` Slack slash command to close tickets
-- [ ] Email notifications via Gmail for weekly summary
+- [ ] Email notifications via Gmail for weekly summary (Currently through slack)
 - [ ] Dashboard view in Airtable with ticket trend charts
 - [ ] Sentiment analysis layer to improve priority scoring
 - [ ] Response time tracking (CreatedAt vs ResolvedAt)
@@ -384,9 +384,8 @@ The escalation workflow connects two separate node chains from the IF true outpu
 
 ## 👤 Author
 
-**Your Name**
+**Laiba Mohsin**
 Final year CS student | Automation & AI integrations
-[GitHub](https://github.com/YOUR_USERNAME) · [LinkedIn](https://linkedin.com/in/YOUR_USERNAME)
 
 ---
 
