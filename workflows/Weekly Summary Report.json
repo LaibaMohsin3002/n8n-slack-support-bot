@@ -1,0 +1,151 @@
+{
+  "name": "Weekly Summary Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "1cdcba9a-0121-4ca5-bd91-fdff0b0c2b4b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appTPav9eomOvbPk2",
+          "mode": "list",
+          "cachedResultName": "SupportBot",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYsOUP6Ew4vonKh",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2/tblYsOUP6Ew4vonKh"
+        },
+        "filterByFormula": "=IS_AFTER(CreatedAt, DATEADD(NOW(), -7, 'days'))",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        -16
+      ],
+      "id": "8eb1abef-76f9-47a5-a3bb-9863c8fb37f2",
+      "name": "Search records",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "LLClIFCdi3h92Rvv",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const tickets = $input.all();\n\nconst total = tickets.length;\nconst billing = tickets.filter(t => t.json.fields.Category === 'billing').length;\nconst bug = tickets.filter(t => t.json.fields.Category === 'bug').length;\nconst general = tickets.filter(t => t.json.fields.Category === 'general').length;\nconst high = tickets.filter(t => t.json.fields.Priority === 'high').length;\nconst medium = tickets.filter(t => t.json.fields.Priority === 'medium').length;\nconst low = tickets.filter(t => t.json.fields.Priority === 'low').length;\nconst resolved = tickets.filter(t => t.json.fields.Status === 'Resolved').length;\nconst open = tickets.filter(t => t.json.fields.Status === 'Open').length;\n\nreturn [{ json: {\n  total, billing, bug, general,\n  high, medium, low,\n  resolved, open,\n  week: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "1f13eab2-a11e-44bc-853f-afee3cfc37be",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B3WD52K0X",
+          "mode": "id"
+        },
+        "text": "=📊 *Weekly Support Summary — {{ $json.week }}*\n\n*Total Tickets:* {{ $json.total }}\n\n*By Category:*\n- Billing: {{ $json.billing }}\n- Bug: {{ $json.bug }}\n- General: {{ $json.general }}\n\n*By Priority:*\n- 🔴 High: {{ $json.high }}\n- 🟡 Medium: {{ $json.medium }}\n- 🟢 Low: {{ $json.low }}\n\n*Status:*\n- ✅ Resolved: {{ $json.resolved }}\n- 🔓 Open: {{ $json.open }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        352,
+        -16
+      ],
+      "id": "ff70f65e-a016-47f2-98d3-3d290a240ce3",
+      "name": "Send a message",
+      "webhookId": "dd676c5e-bcaa-4257-9b31-d422aeaad0f7",
+      "credentials": {
+        "slackApi": {
+          "id": "OMv9lpXp11BMg6uI",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ad168062-0662-4c76-9c1e-916a6c303581",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "28dd563e75ab10dde402378376ceaee3c64e51e8849f6233ea60024175f5f7a8"
+  },
+  "id": "AfCY4J1buCia2Wrx",
+  "tags": []
+}

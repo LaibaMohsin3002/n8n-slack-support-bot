@@ -1,0 +1,376 @@
+{
+  "name": "Slack Support",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -96
+      ],
+      "id": "8f1c2bc2-141c-4edd-a781-06cf000822e5",
+      "name": "Webhook",
+      "webhookId": "b1d2f8ea-6afd-444e-bd01-030f2bd2cbe1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\n// Handle Slack challenge verification\nif (body.type === 'url_verification') {\n  return [{ json: { challenge: body.challenge } }];\n}\n\n// Extract message details\nconst event = body.event;\n\n// Ignore bot messages to prevent infinite loops\nif (event.bot_id || event.subtype) {\n  return [{ json: { skip: true } }];\n}\n\nreturn [{ json: {\n  userMessage: event.text,\n  userId: event.user,\n  channelId: event.channel,\n  timestamp: event.ts\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -96
+      ],
+      "id": "28932305-1651-4568-8a9f-8026075922ee",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -160,
+        -96
+      ],
+      "id": "d56cccb2-4b3b-4c7b-9222-a3d731c8a1bc",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer gsk_YOUR_GROQ_API_KEY_HERE"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a support classifier. Return ONLY valid JSON with keys: category (billing/bug/general), summary (one sentence), priority (high/medium/low). No markdown, no backticks, just raw JSON.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $json.userMessage }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        48,
+        -96
+      ],
+      "id": "9a521006-580e-4eff-a6b3-e6185916b4c8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst raw = response.choices[0].message.content;\nconst parsed = JSON.parse(raw);\nconst prev = $('Code in JavaScript').first().json;\n\nreturn [{ json: {\n  category: parsed.category,\n  summary: parsed.summary,\n  priority: parsed.priority,\n  userMessage: prev.userMessage,\n  userId: prev.userId,\n  channelId: prev.channelId,\n  timestamp: prev.timestamp\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "f10b09ee-0aa1-4d29-921a-248ba21b56d7",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $('Code in JavaScript1').first().json.channelId }}",
+          "mode": "id"
+        },
+        "text": "=Hey <@{{ $('Code in JavaScript1').first().json.userId }}>! We got your message.\n\nCategory: {{ $('Code in JavaScript1').first().json.category }}\n{{ $('Code in JavaScript1').first().json.priority === 'high' ? 'High priority — responding within 2 hours.' : 'We will respond within 24 hours.' }}\n\nTicket ID: {{ $('Airtable').first().json.id }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "e77d10a0-f1d5-4348-a22a-c68b7aca113a",
+      "name": "Send a message",
+      "webhookId": "311072ff-466b-40e9-919f-9a5390f6e178",
+      "credentials": {
+        "slackApi": {
+          "id": "OMv9lpXp11BMg6uI",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appTPav9eomOvbPk2",
+          "mode": "list",
+          "cachedResultName": "SupportBot",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYsOUP6Ew4vonKh",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2/tblYsOUP6Ew4vonKh"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "SlackUserID": "={{ $json.userId }}",
+            "Message": "={{ $json.userMessage }}",
+            "Summary": "={{ $json.summary }}",
+            "ChannelID": "={{ $json.channelId }}",
+            "Category": "={{ $json.category }}",
+            "Priority": "={{ $json.priority }}",
+            "Status": "Open",
+            "CreatedAt": "={{ new Date($json.timestamp * 1000).toISOString() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "SlackUserID",
+              "displayName": "SlackUserID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "billing",
+                  "value": "billing"
+                },
+                {
+                  "name": "bug",
+                  "value": "bug"
+                },
+                {
+                  "name": "general",
+                  "value": "general"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Open",
+                  "value": "Open"
+                },
+                {
+                  "name": "Resolved",
+                  "value": "Resolved"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "CreatedAt",
+              "displayName": "CreatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ChannelID",
+              "displayName": "ChannelID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        -96
+      ],
+      "id": "fabb2bfc-68aa-4c15-b92a-b5234e997d6d",
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "LLClIFCdi3h92Rvv",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "10bc4030-2e4a-42a4-922a-9fe3303938fe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "28dd563e75ab10dde402378376ceaee3c64e51e8849f6233ea60024175f5f7a8"
+  },
+  "id": "pd6VoM4nCbTdmH23",
+  "tags": []
+}

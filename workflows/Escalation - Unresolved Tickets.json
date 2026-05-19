@@ -1,0 +1,385 @@
+{
+  "name": "Escalation - Unresolved Tickets",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        0
+      ],
+      "id": "de3b6e9c-7861-4d15-b7d5-a4b47eff1995",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appTPav9eomOvbPk2",
+          "mode": "list",
+          "cachedResultName": "SupportBot",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYsOUP6Ew4vonKh",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2/tblYsOUP6Ew4vonKh"
+        },
+        "filterByFormula": "AND(Status = 'Open', IS_BEFORE(CreatedAt, DATEADD(NOW(), -24, 'hours')))",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "8ba90c05-ec2b-4132-af29-42a2825cad2f",
+      "name": "Search records",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "LLClIFCdi3h92Rvv",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "34d7113e-557c-4cc3-b8f7-1442147e58c6",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "7fe9662b-07aa-42ab-9791-01880a5b2d7a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B3WD52K0X",
+          "mode": "id"
+        },
+        "text": "=🚨 *Escalation Alert*\n\n{{ $json.count }} tickets have been open for more than 24 hours:\n\n{{ $json.ticketList }}\n\nPlease review and update in Airtable.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        336,
+        -112
+      ],
+      "id": "8905d7dd-f6b9-4455-9272-dad9299034a5",
+      "name": "Send a message",
+      "webhookId": "9302ff87-d729-48e2-bb8f-12271bd51bec",
+      "credentials": {
+        "slackApi": {
+          "id": "OMv9lpXp11BMg6uI",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appTPav9eomOvbPk2",
+          "mode": "list",
+          "cachedResultName": "SupportBot",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYsOUP6Ew4vonKh",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/appTPav9eomOvbPk2/tblYsOUP6Ew4vonKh"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Search records').item.json.id }}",
+            "Status": "Resolved"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "SlackUserID",
+              "displayName": "SlackUserID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "billing",
+                  "value": "billing"
+                },
+                {
+                  "name": "bug",
+                  "value": "bug"
+                },
+                {
+                  "name": "general",
+                  "value": "general"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Open",
+                  "value": "Open"
+                },
+                {
+                  "name": "Resolved",
+                  "value": "Resolved"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "CreatedAt",
+              "displayName": "CreatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ChannelID",
+              "displayName": "ChannelID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        96
+      ],
+      "id": "db68bf61-d84d-4cef-b523-9626874c4e8c",
+      "name": "Update record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "LLClIFCdi3h92Rvv",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const tickets = $input.all();\n\nconst ticketList = tickets.map(t => \n  `• Ticket ${t.json.id} | ${t.json.fields.Category} | Priority: ${t.json.fields.Priority} | Message: ${t.json.fields.Message}`\n).join('\\n');\n\nreturn [{ json: {\n  ticketList,\n  count: tickets.length\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -112
+      ],
+      "id": "b3239c61-0869-43a5-b1e6-513f91e8fd15",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7467cf4f-2318-4733-93b1-bd3d42987940",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "28dd563e75ab10dde402378376ceaee3c64e51e8849f6233ea60024175f5f7a8"
+  },
+  "id": "zDnazLXzaTVTmGwQ",
+  "tags": []
+}
