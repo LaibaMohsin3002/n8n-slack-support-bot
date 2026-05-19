@@ -16,6 +16,26 @@ An intelligent, fully automated customer support system built with **n8n**, **Gr
 
 ---
 
+## 📸 Screenshots
+
+### Slack — Support Message & Auto-Reply
+![Slack Reply](./assets/slack1.png)
+
+### n8n — Main Support Bot Workflow
+![Main Workflow](./assets/c1.png)
+
+### n8n — Weekly Summary Workflow
+![Weekly Workflow](./assets/c3.png)
+
+### n8n — Escalation Workflow
+![Escalation Workflow](./assets/c2.png)
+
+### Slack — Escalation Alert
+![Escalation Alert](./assets/slack2.png)
+
+### Slack — Weekly Summary Report
+![Weekly Summary](./assets/slack3.png)
+
 ## 🧠 Why I Built This
 
 Modern support teams waste hours manually triaging tickets. This project automates the entire first-response layer:
